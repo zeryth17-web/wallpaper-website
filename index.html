@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Hiku Wallpapers</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="top-bar">
+    <div class="logo-area">
+      <div class="logo-dot"></div>
+      <span class="logo-text">Hiku<span>Walls</span></span>
+    </div>
+    <nav class="nav-actions">
+      <a href="#gallery" class="nav-link">Wallpapers</a>
+      <a href="#about" class="nav-link">About</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="hero-text">
+      <h1>Free HD Wallpapers for Your Phone</h1>
+      <p>Curated photos shot by me. Clean, minimal, and ready to use on your home & lock screen.</p>
+      <div class="hero-buttons">
+        <a href="#gallery" class="btn primary">Browse Collection</a>
+        <a href="#about" class="btn ghost">Learn more</a>
+      </div>
+    </div>
+  </section>
+
+  <main class="page">
+    <!-- Controls -->
+    <section class="controls">
+      <div class="control-group">
+        <label for="search">Search</label>
+        <input
+          id="search"
+          type="text"
+          placeholder="Search wallpapers (e.g. night, city, nature)..."
+        />
+      </div>
+
+      <div class="control-group">
+        <span class="label">Category</span>
+        <div class="chip-row" id="categoryChips">
+          <button class="chip active" data-category="all">All</button>
+          <button class="chip" data-category="nature">Nature</button>
+          <button class="chip" data-category="city">City</button>
+          <button class="chip" data-category="abstract">Abstract</button>
+          <button class="chip" data-category="anime">Anime</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Gallery -->
+    <section id="gallery" class="gallery"></section>
+
+    <section id="about" class="about">
+      <h2>About This Project</h2>
+      <p>
+        HikuWalls is a personal wallpaper collection hosted with GitHub Pages.
+        Every wallpaper is shot or edited by me and optimized for modern smartphones.
+      </p>
+      <p>
+        Feel free to download and use them on your device. Sharing is allowed –
+        just don’t claim the photos as your own.
+      </p>
+    </section>
+  </main>
+
+  <!-- Fullscreen viewer -->
+  <div class="viewer" id="viewer">
+    <button class="viewer-close" id="viewerClose" aria-label="Close viewer">×</button>
+    <img id="viewerImage" src="" alt="Wallpaper preview" />
+  </div>
+
+  <footer class="footer">
+    <p>© 2025 HikuWalls — All photos by me.</p>
+  </footer>
+
+  <script>
+    // -------------- WALLPAPER DATA --------------
+    // Edit this list with your own wallpapers
+    const wallpapers = [
+      {
+        id: "city-night",
+        title: "City Lights at Night",
+        category: "city",
+        file: "wallpapers/city-night.jpg",
+        tags: ["city", "night", "lights"]
+      },
+      {
+        id: "forest-path",
+        title: "Forest Path",
+        category: "nature",
+        file: "wallpapers/forest-path.jpg",
+        tags: ["nature", "green", "forest"]
+      },
+      {
+        id: "purple-sky",
+        title: "Purple Sky Gradient",
+        category: "abstract",
+        file: "wallpapers/purple-sky.jpg",
+        tags: ["gradient", "abstract", "purple"]
+      },
+      {
+        id: "anime-girl",
+        title: "Anime Aesthetic",
+        category: "anime",
+        file: "wallpapers/anime-girl.jpg",
+        tags: ["anime", "aesthetic"]
+      }
+      // ➜ Add more objects like this for each wallpaper
+    ];
+
+    // -------------- RENDER GALLERY --------------
+    const gallery = document.getElementById("gallery");
+    const searchInput = document.getElementById("search");
+    const categoryChips = document.getElementById("categoryChips");
+
+    let currentCategory = "all";
+    let currentSearch = "";
+
+    function renderGallery() {
+      const filtered = wallpapers.filter((w) => {
+        const matchesCategory =
+          currentCategory === "all" || w.category === currentCategory;
+
+        const searchText = currentSearch.toLowerCase();
+        const matchesSearch =
+          !searchText ||
+          w.title.toLowerCase().includes(searchText) ||
+          w.tags.some((t) => t.toLowerCase().includes(searchText));
+
+        return matchesCategory && matchesSearch;
+      });
+
+      gallery.innerHTML = "";
+
+      if (!filtered.length) {
+        gallery.innerHTML =
+          '<p class="empty">No wallpapers found. Try another search or category.</p>';
+        return;
+      }
+
+      filtered.forEach((w) => {
+        const card = document.createElement("article");
+        card.className = "card";
+
+        card.innerHTML = `
+          <div class="card-image-wrap" data-view="${w.id}">
+            <img src="${w.file}" alt="${w.title}">
+          </div>
+          <div class="card-body">
+            <div>
+              <h3>${w.title}</h3>
+              <p class="badge">${w.category}</p>
+            </div>
+            <div class="card-actions">
+              <a href="${w.file}" download class="btn primary small">Download</a>
+              <button class="btn ghost small" data-share="${w.id}">
+                Share
+              </button>
+              <button class="btn ghost small" data-view="${w.id}">
+                View
+              </button>
+            </div>
+          </div>
+        `;
+
+        gallery.appendChild(card);
+      });
+    }
+
+    // -------------- SEARCH + CATEGORY --------------
+    searchInput.addEventListener("input", (e) => {
+      currentSearch = e.target.value;
+      renderGallery();
+    });
+
+    categoryChips.addEventListener("click", (e) => {
+      const chip = e.target.closest(".chip");
+      if (!chip) return;
+
+      document
+        .querySelectorAll(".chip")
+        .forEach((c) => c.classList.remove("active"));
+      chip.classList.add("active");
+
+      currentCategory = chip.dataset.category;
+      renderGallery();
+    });
+
+    // -------------- VIEWER --------------
+    const viewer = document.getElementById("viewer");
+    const viewerImage = document.getElementById("viewerImage");
+    const viewerClose = document.getElementById("viewerClose");
+
+    function openViewer(id) {
+      const w = wallpapers.find((x) => x.id === id);
+      if (!w) return;
+      viewerImage.src = w.file;
+      viewerImage.alt = w.title;
+      viewer.classList.add("open");
+    }
+
+    function closeViewer() {
+      viewer.classList.remove("open");
+      viewerImage.src = "";
+    }
+
+    viewerClose.addEventListener("click", closeViewer);
+    viewer.addEventListener("click", (e) => {
+      if (e.target === viewer) closeViewer();
+    });
+
+    // -------------- SHARE --------------
+    async function shareWallpaper(id) {
+      const w = wallpapers.find((x) => x.id === id);
+      if (!w) return;
+
+      const url = new URL(w.file, window.location.href).href;
+      const text = `Check out this wallpaper: ${w.title}`;
+
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: w.title,
+            text,
+            url
+          });
+        } catch (err) {
+          // user cancelled share – ignore
+        }
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(url);
+        alert("Link copied to clipboard!");
+      } else {
+        prompt("Copy this link:", url);
+      }
+    }
+
+    // -------------- CLICK HANDLERS (DELEGATION) --------------
+    gallery.addEventListener("click", (e) => {
+      const viewBtn = e.target.closest("[data-view]");
+      const shareBtn = e.target.closest("[data-share]");
+
+      if (viewBtn) {
+        const id = viewBtn.dataset.view;
+        openViewer(id);
+      }
+
+      if (shareBtn) {
+        const id = shareBtn.dataset.share;
+        shareWallpaper(id);
+      }
+    });
+
+    // Initial render
+    renderGallery();
+  </script>
+</body>
+  </html>
